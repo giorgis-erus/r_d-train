@@ -1,0 +1,18 @@
+---------------Пункт 1-----------
+SELECT cat_name, num from 
+
+  (SELECT category_id, count(film_id) as num
+   FROM public.film_category
+   GROUP BY category_id) as films
+
+  LEFT OUTER JOIN
+  
+  (SELECT category_id as id, "name" as cat_name 
+   FROM public.category) as cat
+  
+  on films.category_id = cat.id
+  
+ORDER BY num desc
+
+---------------Пункт 1-----------
+
