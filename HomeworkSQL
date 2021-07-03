@@ -25,3 +25,16 @@ group by act.actor_id, first_name, last_name
 order by sum_rent desc
 limit 10	
 ----------------Пункт 2-----------------
+
+
+----------------Пункт 4-----------------
+select f.film_id, f2.title 
+from public.film as f
+left outer join
+public.inventory as inv
+On f.film_id = inv.film_id 
+left outer join 
+public.film f2 
+on f.film_id = f2.film_id 
+Where inv.film_id is null
+----------------Пункт 4-----------------
