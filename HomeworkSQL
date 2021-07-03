@@ -16,3 +16,12 @@ ORDER BY num desc
 
 ---------------Пункт 1-----------
 
+----------------Пункт 2-----------------
+select act.actor_id, first_name, last_name, sum(rental_duration) as sum_rent
+from public.film as f
+left join public.film_actor as f_a on f.film_id = f_a.film_id 
+left join public.actor as act on act.actor_id = f_a.actor_id
+group by act.actor_id, first_name, last_name
+order by sum_rent desc
+limit 10	
+----------------Пункт 2-----------------
