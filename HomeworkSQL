@@ -89,3 +89,71 @@ on a.address_id = c2.address_id
 order by sum (case when active is null then null when active = 0 then 1 else 0 end) over (partition by c.city_id) desc
 
 -----------------Пункт 6--------------------
+
+
+-----------------Пункт 7----------------------
+
+select title, "name"
+
+from 
+(
+	(select distinct 'For cities started with a' as title, c3."name" , -- поле title исользую просто, чтобы разделить пункты задания
+	sum(round(abs(extract(epoch from r.return_date - r.rental_date)/3600)::numeric,2)) over(partition by c3."name") as sum_rental 
+	-- здесь посчитано кол-во часов аренды (return_date - rental_date) по каждой категории
+	from public.film as f
+	left outer join
+	public.inventory i 
+	on f.film_id = i.film_id --находим для каждого фильма номер inventory_id (его сдаваемой в аренду копии)
+	left outer join 
+	public.rental r 
+	on i.inventory_id = r.inventory_id --далее через таблицу rental находим покупателя, который собственно взял в аренду копию inventory_id
+	left outer join 
+	public.customer c 
+	on r.customer_id = c.customer_id -- находим покупателя customer_id
+	left outer join 
+	public.address a
+	on c.address_id = a.address_id -- затем находим адрес покупателя
+	left outer join 
+	public.city c2 
+	on a.city_id = c2.city_id -- через адрес находим город
+	left outer join 
+	public.film_category fc --вспоминаем, что нам нужны категории фильмов, джойним с таблицей film_category, чтобы найти category_id
+	on f.film_id = fc.film_id 
+	left outer join 
+	public.category c3 
+	on fc.category_id = c3.category_id  --и затем по category_id находим название категории
+	where left(c2.city,1) = 'a' -- нам интересны только города, которые начинаются на a
+	order by sum_rental desc -- сортируем по убыванию показателя и выбираем только первую категорию
+	limit 1 )
+
+	union all --объединяем с таким же запросом, но с условием для городов, содержащих символ '-'. 
+	--Все то же самое, только отличается условие на c2.city
+	(select distinct 'For cities contain -' as title, c3."name" , 
+	sum(round(abs(extract(epoch from r.return_date - r.rental_date)/3600)::numeric,2)) over(partition by c3."name") as sum_rental
+	from public.film as f
+	left outer join
+	public.inventory i 
+	on f.film_id = i.film_id 
+	left outer join 
+	public.rental r 
+	on i.inventory_id = r.inventory_id 
+	left outer join 
+	public.customer c 
+	on r.customer_id = c.customer_id 
+	left outer join 
+	public.address a
+	on c.address_id = a.address_id
+	left outer join 
+	public.city c2 
+	on a.city_id = c2.city_id 
+	left outer join 
+	public.film_category fc 
+	on f.film_id = fc.film_id 
+	left outer join 
+	public.category c3 
+	on fc.category_id = c3.category_id 
+	where c2.city like '%-%'
+	order by sum_rental desc 
+	limit 1) 
+	
+) result;
