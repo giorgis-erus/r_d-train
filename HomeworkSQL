@@ -26,6 +26,30 @@ order by sum_rent desc
 limit 10	
 ----------------Пункт 2-----------------
 
+----------------Пункт 3-----------------
+select "name"
+from
+(select distinct  c3."name", sum(p.amount)  
+	from public.film as f
+	left outer join
+	public.inventory i 
+	on f.film_id = i.film_id --находим для каждого фильма номер inventory_id (его сдаваемой в аренду копии)
+	left outer join 
+	public.rental r 
+	on i.inventory_id = r.inventory_id --джойним с таблицей rental, чтобы затем по rental_id найти платеж
+	left outer join 
+	public.payment p 
+	on r.rental_id = p.rental_id -- по rental_id джойним с payments, чтобы достать оттуда сумму payment
+	left outer join 
+	public.film_category fc --вспоминаем, что нам нужны категории фильмов, джойним с таблицей film_category, чтобы найти category_id
+	on f.film_id = fc.film_id 
+	left outer join 
+	public.category c3 
+	on fc.category_id = c3.category_id  --и затем по category_id находим название категории
+ group by c3."name"
+ order by sum(p.amount) desc
+ limit 1) result;
+ ----------------Пункт 3-----------------
 
 ----------------Пункт 4-----------------
 select f.film_id, f2.title 
