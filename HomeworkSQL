@@ -38,3 +38,27 @@ public.film f2
 on f.film_id = f2.film_id 
 Where inv.film_id is null
 ----------------Пункт 4-----------------
+
+
+-----------------Пункт 6--------------------
+сa - количество активных клиентов
+cna - количествно неактивных клиентов
+
+сс или сa могут быть is NULL, если для города из таблицы city не нашлось соответствия адреса в таблице address, либо если по найденному адресу нет клиента в таблице customer
+
+select distinct c.city_id as c_id, city,
+sum (case when active is null then null when active = 1 then 1 else 0 end) over (partition by c.city_id) as ca,
+sum (case when active is null then null when active = 0 then 1 else 0 end) over (partition by c.city_id) as cna
+from 
+public.city c
+left outer join 
+public.address a  
+on c.city_id = a.city_id
+left outer join 
+public.customer c2
+on a.address_id = c2.address_id 
+--where a.city_id is null
+--group by c.city_id, city, c2.active , c2.first_name
+order by sum (case when active is null then null when active = 0 then 1 else 0 end) over (partition by c.city_id) desc
+
+-----------------Пункт 6--------------------
