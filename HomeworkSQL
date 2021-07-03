@@ -39,12 +39,41 @@ on f.film_id = f2.film_id
 Where inv.film_id is null
 ----------------Пункт 4-----------------
 
+-----------------Пункт 5------------------
+--
+select result2.actor_id, first_name, last_name
+from
+(
+  --Здесь считаем какой актер по счету в списке с количеством фильмов
+	select distinct actor_id, cnt,
+	dense_rank() over (order by cnt desc) as pos
+	from 
+	(
+    --Здесь считаем в скольких фильмах из категории 'Children' снялись актеры
+		select actor_id, fa.film_id as film_id, 
+		count(*) over(partition by actor_id) as cnt
+		from public.film_actor fa 
+		left outer join public.film_category fc 
+		on fa.film_id = fc.film_id 
+		where fc.category_id  in (select category_id from public.category where "name" = 'Children')
+		
+	) result1
+	order by (dense_rank() over (order by cnt desc)) asc
+) as result2
+left outer join 
+public.actor a 
+on result2.actor_id = a.actor_id
+where pos <=3
+order by pos desc
+--Выводим актеров, у которых ранг <=3, по убыванию ранга
+
+---------------Пункт 5---------------------
 
 -----------------Пункт 6--------------------
-сa - количество активных клиентов
-cna - количествно неактивных клиентов
+--сa - количество активных клиентов
+--cna - количествно неактивных клиентов
 
-сс или сa могут быть is NULL, если для города из таблицы city не нашлось соответствия адреса в таблице address, либо если по найденному адресу нет клиента в таблице customer
+--сс или сa могут быть is NULL, если для города из таблицы city не нашлось соответствия адреса в таблице address, либо если по найденному адресу нет клиента в таблице customer
 
 select distinct c.city_id as c_id, city,
 sum (case when active is null then null when active = 1 then 1 else 0 end) over (partition by c.city_id) as ca,
@@ -57,8 +86,6 @@ on c.city_id = a.city_id
 left outer join 
 public.customer c2
 on a.address_id = c2.address_id 
---where a.city_id is null
---group by c.city_id, city, c2.active , c2.first_name
 order by sum (case when active is null then null when active = 0 then 1 else 0 end) over (partition by c.city_id) desc
 
 -----------------Пункт 6--------------------
